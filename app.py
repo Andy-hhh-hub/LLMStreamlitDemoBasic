@@ -1,6 +1,20 @@
 import streamlit as st
 import os
 import embed_pdf
+from utils.sagemaker_endpoint import SagemakerEndpointEmbeddings
+from handlers.content import ContentHandler, ContentHandlerQA
+
+global own_embeddings
+region = 'cn-northwest-1'
+EMBEDDING_ENDPOINT_NAME = "cmlm-bge-g4dn-endpoint"
+content_handler = ContentHandler()
+content_handler_qa = ContentHandlerQA()
+own_embeddings = SagemakerEndpointEmbeddings(
+    endpoint_name=EMBEDDING_ENDPOINT_NAME,
+    region_name=region,
+    content_handler=content_handler,
+)
+# print(own_embeddings.embed_query("test"))
 
 # create sidebar and ask for openai api key if not set in secrets
 secrets_file_path = os.path.join(".streamlit", "secrets.toml")
@@ -23,7 +37,7 @@ else:
     if st.sidebar.button("Embed Documents"):
         st.sidebar.info("Embedding documents...")
         try:
-            embed_pdf.embed_all_pdf_docs()
+            embed_pdf.embed_all_pdf_docs(embedding_func=own_embeddings)
             st.sidebar.info("Done!")
         except Exception as e:
             st.sidebar.error(e)
@@ -81,21 +95,26 @@ if prompt:
         retrieval_status = retrival_container.status("**Context Retrieval**")
         queried_questions = []
         rendered_questions = set()
+
+
         def update_retrieval_status():
             for q in queried_questions:
                 if q in rendered_questions:
                     continue
                 rendered_questions.add(q)
                 retrieval_status.markdown(f"\n\n`- {q}`")
+
+
         def retrieval_cb(qs):
             for q in qs:
                 if q not in queried_questions:
                     queried_questions.append(q)
             return qs
-        
+
+
         # get the chain with the retrieval callback
         custom_chain = get_rag_chain_func(chosen_file, retrieval_cb=retrieval_cb)
-        
+
         if "messages" in st.session_state:
             chat_history = [convert_message(m) for m in st.session_state.messages[:-1]]
         else:
@@ -103,7 +122,7 @@ if prompt:
 
         full_response = ""
         for response in custom_chain.stream(
-            {"input": prompt, "chat_history": chat_history}
+                {"input": prompt, "chat_history": chat_history}
         ):
             if "output" in response:
                 full_response += response["output"]

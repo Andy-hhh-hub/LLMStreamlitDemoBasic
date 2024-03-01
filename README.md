@@ -11,7 +11,8 @@ You can use conda to install the required packages:
 ```sh
 conda create -n p311-llm python=3.11
 conda activate p311-llm
-pip install -r requirements.txt
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install -r requirements.txt -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com
 ```
 
 ### With Poetry (optional)
