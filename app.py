@@ -37,7 +37,7 @@ else:
     if st.sidebar.button("Embed Documents"):
         st.sidebar.info("Embedding documents...")
         try:
-            embed_pdf.embed_all_pdf_docs(embedding_func=own_embeddings)
+            embed_pdf.embed_all_pdf_docs()
             st.sidebar.info("Done!")
         except Exception as e:
             st.sidebar.error(e)
