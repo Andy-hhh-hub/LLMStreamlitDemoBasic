@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # ====================================
-# @Project ：llm-stream-reponse-lambda
+# @Project ：LLMStreamlit
 # @IDE     ：PyCharm
-# @Author  ：Hao,Wireless Zhiheng
-# @Email   ：zhhao@deloitte.com.cn
-# @Date    ：2023/11/7 16:18 
+# @Author  ：Huang Andy Hong Hua
+# @Email   ：
+# @Date    ：2024/3/20 10:33
 # ====================================
 import json
 import logging

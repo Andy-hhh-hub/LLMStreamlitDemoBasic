@@ -1,10 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+# ====================================
+# @Project ：LLMStreamlit
+# @IDE     ：PyCharm
+# @Author  ：Huang Andy Hong Hua
+# @Email   ：
+# @Date    ：2024/3/20 10:33
+# ====================================
 import streamlit as st
-import os
+import os, json
 import embed_pdf
 from utils.sagemaker_endpoint import SagemakerEndpointEmbeddings
 from handlers.content import ContentHandler, ContentHandlerQA
+from langchain_community.chat_models import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain import SagemakerEndpoint
+from langchain.llms.sagemaker_endpoint import LLMContentHandler
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
-global own_embeddings
+global own_llm, own_embeddings
 region = 'cn-northwest-1'
 EMBEDDING_ENDPOINT_NAME = "cmlm-bge-g4dn-endpoint"
 content_handler = ContentHandler()
@@ -14,6 +28,21 @@ own_embeddings = SagemakerEndpointEmbeddings(
     region_name=region,
     content_handler=content_handler,
 )
+chatbot_config = json.load(open('./configs/config.json'))
+own_llm = ChatOpenAI(api_key=chatbot_config["chatbot"]["moonshot_api_key"],
+                     base_url=chatbot_config["chatbot"]["moonshot_api_base"],
+                     model=chatbot_config["chatbot"]["moonshot_deployment_name"])
+content_handler_qa = ContentHandlerQA()
+# kwargs = {"temperature": 0.01}
+kwargs ={"parameters":{"temperature": 0.01},"messages":[]}
+llm = SagemakerEndpoint(endpoint_name=chatglm_endpoint_name, region_name=("cn-north-1"),
+                        content_handler=content_handler_qa, model_kwargs=kwargs)
+
+# messages = [
+#     SystemMessage(content="You are a helpful assistant."),
+#     HumanMessage(content="hi")
+# ]
+# print(own_llm(messages))
 # print(own_embeddings.embed_query("test"))
 
 # create sidebar and ask for openai api key if not set in secrets
@@ -37,7 +66,7 @@ else:
     if st.sidebar.button("Embed Documents"):
         st.sidebar.info("Embedding documents...")
         try:
-            embed_pdf.embed_all_pdf_docs()
+            embed_pdf.embed_all_pdf_docs(own_embeddings)
             st.sidebar.info("Done!")
         except Exception as e:
             st.sidebar.error(e)

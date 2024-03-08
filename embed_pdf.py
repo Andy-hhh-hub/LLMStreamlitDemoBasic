@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+# ====================================
+# @Project ：LLMStreamlit
+# @IDE     ：PyCharm
+# @Author  ：Huang Andy Hong Hua
+# @Email   ：
+# @Date    ：2024/3/20 10:33
+# ====================================
 from langchain.document_loaders import PagedPDFSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -6,15 +15,13 @@ from langchain.vectorstores import FAISS
 import os
 
 
-def embed_document(file_name, file_folder="pdf", embedding_folder="index"):
-    global own_embeddings
-
+def embed_document(file_name, embedding_func, file_folder="pdf", embedding_folder="index"):
     file_path = f"{file_folder}/{file_name}"
     loader = PagedPDFSplitter(file_path)
     source_pages = loader.load_and_split()
 
     # embedding_func = OpenAIEmbeddings()  # openai embeddings 不使用
-    embedding_func = own_embeddings
+
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=100,
@@ -24,6 +31,7 @@ def embed_document(file_name, file_folder="pdf", embedding_folder="index"):
     )
     source_chunks = text_splitter.split_documents(source_pages)
     search_index = FAISS.from_documents(source_chunks, embedding_func)
+    print('===== file_name:', file_name)
     search_index.save_local(
         folder_path=embedding_folder, index_name=file_name + ".index"
     )
@@ -43,7 +51,7 @@ def embed_all_pdf_docs(embedding_func):
         if pdf_files:
             for pdf_file in pdf_files:
                 print(f"Embedding {pdf_file}...")
-                embed_document(file_name=pdf_file, file_folder=pdf_directory)
+                embed_document(file_name=pdf_file, embedding_func=embedding_func, file_folder=pdf_directory)
                 print("Done!")
         else:
             raise Exception("No PDF files found in the directory.")
